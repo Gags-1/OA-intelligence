@@ -28,10 +28,21 @@ def create_question_endpoint(
     response_model=list[QuestionResponse],
 )
 def get_questions_endpoint(
+    company_id: int | None = None,
+    role: str | None = None,
+    difficulty: str | None = None,
+    page: int = 1,
+    page_size: int = 20,
     db: Session = Depends(get_db),
 ):
-    return get_questions(db)
-
+    return get_questions(
+        db=db,
+        company_id=company_id,
+        role=role,
+        difficulty=difficulty,
+        page=page,
+        page_size=page_size,
+    )
 
 @router.get(
     "/{question_id}",

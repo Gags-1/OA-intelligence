@@ -25,13 +25,45 @@ def create_question(
 
     return question
 
-def get_questions(db: Session) -> list[Question]:
-    statement = select(Question).order_by(Question.created_at.desc())
+def get_questions(
+    db: Session,
+    company_id: int | None = None,
+    role: str | None = None,
+    difficulty: str | None = None,
+    page: int = 1,
+    page_size: int = 20,
+) -> list[Question]:
+
+    statement = select(Question)
+
+    if company_id is not None:
+        statement = statement.where(
+            Question.company_id == company_id
+        )
+
+    if role is not None:
+        statement = statement.where(
+            Question.role == role
+        )
+
+    if difficulty is not None:
+        statement = statement.where(
+            Question.difficulty == difficulty
+        )
+
+    statement = (
+        statement
+        .order_by(
+            Question.created_at.desc(),
+            Question.id.desc(),
+        )
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
 
     result = db.execute(statement)
 
     return list(result.scalars().all())
-
 
 
 def get_question(
