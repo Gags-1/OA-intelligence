@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: oa-intelligence-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: oa_user
+      POSTGRES_PASSWORD: oa_password
+      POSTGRES_DB: oa_intelligence
+    ports:
+      - "5433:5432"
+    volumes:
+      - oa_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  oa_postgres_data:
