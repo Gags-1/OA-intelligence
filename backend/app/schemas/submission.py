@@ -9,9 +9,9 @@ class SubmissionStatus(str, Enum):
     PROCESSING = "processing"
     PROCESSED = "processed"
     DUPLICATE = "duplicate"
+    SEMANTIC_DUPLICATE = "semantic_duplicate"
     FAILED = "failed"
     NEEDS_REVIEW = "needs_review"
-
 
 class SubmissionCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
