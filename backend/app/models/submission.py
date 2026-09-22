@@ -18,6 +18,11 @@ class Submission(Base):
         nullable=True,
     )
 
+    company_id: Mapped[int] = mapped_column(
+        ForeignKey("companies.id"),
+        nullable=False,
+    )
+
     raw_text: Mapped[str] = mapped_column(
         Text,
         nullable=False,
@@ -36,6 +41,16 @@ class Submission(Base):
     source_reference: Mapped[str | None] = mapped_column(
         String(500),
         nullable=True,
+    )
+
+    role: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+
+    difficulty: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
     )
 
     status: Mapped[str] = mapped_column(

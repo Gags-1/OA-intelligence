@@ -25,7 +25,7 @@ class SubmissionWorker:
             QueueUrl=self.queue_url,
             MaxNumberOfMessages=1,
             WaitTimeSeconds=20,
-            VisibilityTimeout=60,
+            VisibilityTimeout=10,
         )
 
         return response.get("Messages", [])

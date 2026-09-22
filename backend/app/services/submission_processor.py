@@ -141,7 +141,35 @@ def process_submission(
     5. Create new question if no duplicate exists
     6. Generate embedding for the new question
     7. Store the embedding in Qdrant
+    8. Finalize submission
     """
+    # ---------------------------------------------------------
+    # Idempotency guard
+    # ---------------------------------------------------------
+    # SQS provides at-least-once delivery, so the same message
+    # can occasionally be delivered more than once.
+    #
+    # If this submission was already completed, don't process it
+    # again. Return the question that was created/linked earlier.
+
+    if submission.status in {
+        "processed",
+        "duplicate",
+        "semantic_duplicate",
+    }:
+        print(
+            f"Submission {submission.id} "
+            f"already completed with status={submission.status}"
+        )
+
+        if submission.question_id is not None:
+            question = db.get(
+                Question,
+                submission.question_id,
+            )
+
+            if question is not None:
+                return question
 
     submission.status = "processing"
     db.flush()
@@ -207,9 +235,9 @@ def process_submission(
             question_text=submission.raw_text.strip(),
             normalized_text_hash=question_hash,
             question_type="unknown",
-            company_id=1,
-            role="unknown",
-            difficulty="unknown",
+            company_id=submission.company_id,
+            role=submission.role,
+            difficulty=submission.difficulty,
             source=submission.source,
             source_reference=submission.source_reference,
             status="pending",
