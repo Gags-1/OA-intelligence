@@ -2,6 +2,7 @@ from logging.config import fileConfig
 from app.core.database import Base
 from app.models.company import Company
 from app.models.question import Question
+from app.models.submission import Submission
 from app.core.config import settings
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
