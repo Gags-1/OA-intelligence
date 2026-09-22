@@ -4,13 +4,19 @@ import hashlib
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.question import Question
 from app.models.submission import Submission
 from app.services.embedding_service import generate_embedding
-from app.services.vector_store import search_similar_questions
+from app.services.vector_store import (
+    search_similar_questions,
+    upsert_question,
+)
 
 
-SEMANTIC_DUPLICATE_THRESHOLD = 0.86
+SEMANTIC_DUPLICATE_THRESHOLD = float(
+    settings.SEMANTIC_DUPLICATE_THRESHOLD
+)
 
 
 def normalize_question_text(text: str) -> str:
@@ -47,6 +53,12 @@ def find_exact_duplicate(
     db: Session,
     normalized_text: str,
 ) -> Question | None:
+    """
+    Find an exact duplicate using the normalized text hash.
+
+    The hash narrows down the candidates, and the normalized
+    text comparison provides an explicit final verification.
+    """
 
     question_hash = generate_question_hash(
         normalized_text
@@ -60,8 +72,6 @@ def find_exact_duplicate(
 
     candidates = result.scalars().all()
 
-    # Hash gives us candidate rows.
-    # We still verify normalized text explicitly.
     for question in candidates:
         existing_normalized = normalize_question_text(
             question.question_text
@@ -80,11 +90,11 @@ def find_semantic_duplicate(
     """
     Find an existing question that is semantically similar
     to the submitted question.
-
-    The initial threshold is 0.86 based on our evaluation set.
     """
 
-    embedding = generate_embedding(question_text)
+    embedding = generate_embedding(
+        question_text
+    )
 
     similar_questions = search_similar_questions(
         embedding,
@@ -105,8 +115,8 @@ def find_semantic_duplicate(
         f"score={top_match.score:.4f}"
     )
 
-    # Qdrant gives us the question ID.
-    # Fetch the authoritative question from PostgreSQL.
+    # Qdrant provides the question ID.
+    # PostgreSQL remains the authoritative source.
     question = db.get(
         Question,
         top_match.id,
@@ -119,6 +129,19 @@ def process_submission(
     db: Session,
     submission: Submission,
 ) -> Question:
+    """
+    Process a submitted question.
+
+    Processing order:
+
+    1. Normalize question text
+    2. Generate deterministic hash
+    3. Check exact duplicate
+    4. Check semantic duplicate
+    5. Create new question if no duplicate exists
+    6. Generate embedding for the new question
+    7. Store the embedding in Qdrant
+    """
 
     submission.status = "processing"
     db.flush()
@@ -194,6 +217,28 @@ def process_submission(
 
         db.add(question)
         db.flush()
+
+        # ---------------------------------------------------------
+        # 6. Generate embedding for new question
+        # ---------------------------------------------------------
+
+        embedding = generate_embedding(
+            question.question_text
+        )
+
+        # ---------------------------------------------------------
+        # 7. Store embedding in Qdrant
+        # ---------------------------------------------------------
+
+        upsert_question(
+            question_id=question.id,
+            question_text=question.question_text,
+            embedding=embedding,
+        )
+
+        # ---------------------------------------------------------
+        # 8. Finalize submission
+        # ---------------------------------------------------------
 
         submission.question_id = question.id
         submission.status = "processed"
