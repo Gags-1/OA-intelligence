@@ -49,3 +49,9 @@ class Submission(Base):
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
     )
+
+    status: Mapped[str] = mapped_column(
+    String(30),
+    nullable=False,
+    default="pending",
+    )

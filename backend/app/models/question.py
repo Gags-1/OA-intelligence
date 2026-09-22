@@ -16,6 +16,14 @@ class Question(Base):
         nullable=False,
     )
 
+    normalized_text_hash: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True,
+    	unique=True,
+        index=True,
+    )
+
+
     question_type: Mapped[str] = mapped_column(
         String(50),
         nullable=False,

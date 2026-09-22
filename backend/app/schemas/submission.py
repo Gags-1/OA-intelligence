@@ -1,6 +1,16 @@
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
+from enum import Enum
+
+
+class SubmissionStatus(str, Enum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    PROCESSED = "processed"
+    DUPLICATE = "duplicate"
+    FAILED = "failed"
+    NEEDS_REVIEW = "needs_review"
 
 
 class SubmissionCreate(BaseModel):
@@ -24,6 +34,6 @@ class SubmissionResponse(BaseModel):
     input_type: str
     source: str
     source_reference: str | None
-    status: str
+    status: SubmissionStatus
     created_at: datetime
     updated_at: datetime
