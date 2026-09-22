@@ -16,9 +16,9 @@ class Question(Base):
         nullable=False,
     )
 
-    normalized_text_hash: Mapped[str | None] = mapped_column(
+    normalized_text_hash: Mapped[str] = mapped_column(
         String(64),
-        nullable=True,
+        nullable=False,
     	unique=True,
         index=True,
     )

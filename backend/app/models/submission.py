@@ -1,20 +1,27 @@
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import DateTime, String, Text, ForeignKey
 from datetime import datetime
+
+from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
+
 from app.core.database import Base
 
 
 class Submission(Base):
     __tablename__ = "question_submissions"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+    )
 
     question_id: Mapped[int | None] = mapped_column(
         ForeignKey("questions.id"),
         nullable=True,
     )
 
-    raw_text: Mapped[str] = mapped_column(Text, nullable=False)
+    raw_text: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+    )
 
     input_type: Mapped[str] = mapped_column(
         String(30),
@@ -34,7 +41,7 @@ class Submission(Base):
     status: Mapped[str] = mapped_column(
         String(30),
         nullable=False,
-        default="received",
+        default="pending",
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -48,10 +55,4 @@ class Submission(Base):
         nullable=False,
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
-    )
-
-    status: Mapped[str] = mapped_column(
-    String(30),
-    nullable=False,
-    default="pending",
     )
